@@ -10,6 +10,13 @@ W = 1920//2
 H = 1080//2
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+print(f"Device used: {DEVICE}")
+
+K = [[11.287663,  0.0,       480.0],
+     [ 0.0,       11.287663, 270.0],
+     [ 0.0,       0.0,         1.0]]
+
+
 def slam():
     args = parse_args()
     video_path = resolve_video_path(args.video)
