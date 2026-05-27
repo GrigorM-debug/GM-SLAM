@@ -1,1 +1,52 @@
-print("Hello World")
+import cv2
+import torch
+from helpers import parse_args, resolve_video_path
+from frame import process_frame
+from display2d import Display2D
+from extractor import FeatureExtractor
+from matcher import FeatureMatcher
+
+W = 1920//2
+H = 1080//2
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+def slam():
+    args = parse_args()
+    video_path = resolve_video_path(args.video)
+    print(f"[INFO] Video path: {video_path}")
+
+    if not video_path.exists():
+        print("[ERROR] Video file does not exist.")
+        print("        Pass an absolute path or run with the correct relative path.")
+        return
+
+    cap = cv2.VideoCapture(str(video_path))
+    if not cap.isOpened():
+        print("[ERROR] OpenCV failed to open the video.")
+        return
+
+    ret, frame = cap.read()
+    if not ret or frame is None:
+        print("[ERROR] Video opened but no readable frames were found.")
+        cap.release()
+        return
+
+    display = Display2D(W, H)
+    extractor = FeatureExtractor(DEVICE)
+    matcher = FeatureMatcher(DEVICE)
+
+    while True:
+        process_frame(frame, W, H, extractor, matcher, display)
+
+        if cv2.waitKey(1) == ord('q'):
+            break
+        ret, frame = cap.read()
+        if not ret or frame is None:
+            break
+
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    slam()
