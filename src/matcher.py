@@ -16,6 +16,8 @@ class FeatureMatcher:
     self.keypoint_radius = 5
     self.keypoint_thickness = 3
     self.match_line_thickness = 4
+    self.pts_prev = None
+    self.pts_curr = None
 
   def match_and_draw(self, img, feats):
     kpts = feats["keypoints"][0]
@@ -31,7 +33,7 @@ class FeatureMatcher:
           self.keypoint_thickness,
         )
       self.prev_feats = feats
-      return img, 0, int(kpts.shape[0])
+      return img, 0, int(kpts.shape[0]), None, None
 
     matches01 = self.matcher({"image0": self.prev_feats, "image1": feats})
     matches01 = rbd(matches01)
@@ -48,11 +50,13 @@ class FeatureMatcher:
 
     matches_np = matches.cpu().numpy() if matches.numel() > 0 else []
     n_good = 0
+
     for m in matches_np:
       p_prev = prev_kpts[int(m[0])]
       p_curr = curr_kpts[int(m[1])]
       x1, y1 = int(p_prev[0]), int(p_prev[1])
       x2, y2 = int(p_curr[0]), int(p_curr[1])
+
       cv2.line(
         img,
         (x1, y1),
@@ -69,5 +73,13 @@ class FeatureMatcher:
       )
       n_good += 1
 
+    if len(matches_np) > 0:
+      self.pts_prev = prev_kpts[matches_np[:,0]]
+      self.pts_curr = curr_kpts[matches_np[:,1]]
+    else:
+      self.pts_prev = None
+      self.pts_curr = None
+
     self.prev_feats = feats
-    return img, int(matches.shape[0]), int(kpts.shape[0])
+
+    return img, int(matches.shape[0]), int(kpts.shape[0]), self.pts_prev, self.pts_curr

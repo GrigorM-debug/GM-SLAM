@@ -17,6 +17,8 @@ K = np.array([[11.287663,  0.0,       480.0],
      [ 0.0,       11.287663, 270.0],
      [ 0.0,       0.0,         1.0]])
 
+# F = 270
+# K = np.array(([F, 0, W//2], [0,F,H//2], [0, 0, 1]))
 
 def slam():
     args = parse_args()
@@ -44,7 +46,7 @@ def slam():
     matcher = FeatureMatcher(DEVICE)
 
     while True:
-        process_frame(frame, W, H, extractor, matcher, display)
+        process_frame(frame, extractor, matcher, display, K, W, H)
 
         if cv2.waitKey(1) == ord('q'):
             break

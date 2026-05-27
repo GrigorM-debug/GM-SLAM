@@ -1,9 +1,10 @@
 import cv2
 
-def process_frame(img, W, H, extractor, matcher, display):
+def process_frame(img, extractor, matcher, display, K, W, H):
+    img = cv2.resize(img, (W, H))
     feats = extractor.extract(img)
 
-    vis, n_good, n_kpts = matcher.match_and_draw(img, feats)
+    vis, n_good, n_kpts, pts_prev, pts_curr = matcher.match_and_draw(img, feats)
 
     label = f"Features: {n_kpts}  Matches: {n_good}"
 
@@ -25,5 +26,24 @@ def process_frame(img, W, H, extractor, matcher, display):
         thickness,
         cv2.LINE_AA,
     )
+
+    if pts_prev is not None or pts_curr is not None:
+        # Compute the Essensial matrix 
+        E, inlier_mask = cv2.findEssentialMat(pts_prev, pts_curr, cameraMatrix=K,
+                                    method=cv2.USAC_MAGSAC,
+                                    prob=0.999,   
+                                    threshold=1.0)
+    
+        if E is not None and inlier_mask is not None:
+            print(f"Essential matrix: {E}")
+            
+            # Recover the relative camera pose
+            valid_points, R, t, pose_mask = cv2.recoverPose(E, pts_prev, pts_curr, cameraMatrix=K, mask=inlier_mask)
+
+            print(f"Rotation matrix: {R}")
+            print(f"translation vector: {t}")
+
+
+    # Triangulation will be here
 
     display.paint(vis)
