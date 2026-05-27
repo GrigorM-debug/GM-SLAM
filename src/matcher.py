@@ -7,13 +7,10 @@ class FeatureMatcher:
     self.device = device
     # Default params
     self.matcher = LightGlue(features="aliked").eval().to(device)
-
     # Accuracy params
     # self.matcher = LightGlue(features="aliked", depth_confidence=-1, width_confidence=-1).eval().to(device)
-
     # Speed params
     # self.matcher = LightGlue(features="aliked", depth_confidence=0.9, width_confidence=0.95).eval().to(self.device)
-
     self.prev_feats = None
     self.score_threshold = 0.2
     self.keypoint_radius = 5

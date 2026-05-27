@@ -1,5 +1,6 @@
 import cv2
 import torch
+import numpy as np
 from helpers import parse_args, resolve_video_path
 from frame import process_frame
 from display2d import Display2D
@@ -12,9 +13,9 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 print(f"Device used: {DEVICE}")
 
-K = [[11.287663,  0.0,       480.0],
+K = np.array([[11.287663,  0.0,       480.0],
      [ 0.0,       11.287663, 270.0],
-     [ 0.0,       0.0,         1.0]]
+     [ 0.0,       0.0,         1.0]])
 
 
 def slam():

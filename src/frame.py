@@ -1,7 +1,6 @@
 import cv2
 
 def process_frame(img, W, H, extractor, matcher, display):
-
     feats = extractor.extract(img)
 
     vis, n_good, n_kpts = matcher.match_and_draw(img, feats)
