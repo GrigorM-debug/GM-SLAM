@@ -15,7 +15,7 @@ def parse_args():
 
 def resolve_video_path(video_arg):
   script_dir = Path(__file__).resolve().parent
-  default_video = script_dir.parent / "videos" / "video.mp4"
+  default_video = script_dir.parent / "videos" / "video4.mp4"
 
   if video_arg is None:
     return default_video

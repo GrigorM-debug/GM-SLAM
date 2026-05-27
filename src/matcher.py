@@ -13,9 +13,9 @@ class FeatureMatcher:
     # self.matcher = LightGlue(features="aliked", depth_confidence=0.9, width_confidence=0.95).eval().to(self.device)
     self.prev_feats = None
     self.score_threshold = 0.2
-    self.keypoint_radius = 5
-    self.keypoint_thickness = 3
-    self.match_line_thickness = 4
+    self.keypoint_radius = 2
+    self.keypoint_thickness = 2
+    self.match_line_thickness = 2
     self.pts_prev = None
     self.pts_curr = None
 
