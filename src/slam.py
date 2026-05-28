@@ -6,6 +6,7 @@ from frame import process_frame
 from display2d import Display2D
 from extractor import FeatureExtractor
 from matcher import FeatureMatcher
+from map import Map
 
 W = 1920//2
 H = 1080//2
@@ -44,9 +45,10 @@ def slam():
   display = Display2D(W, H)
   extractor = FeatureExtractor(DEVICE)
   matcher = FeatureMatcher(DEVICE)
+  map = Map()
 
   while True:
-    process_frame(frame, extractor, matcher, display, K, W, H)
+    process_frame(frame, extractor, matcher, display, K, W, H, map)
 
     if cv2.waitKey(1) == ord('q'):
       break
