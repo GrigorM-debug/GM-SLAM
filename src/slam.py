@@ -14,12 +14,12 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 print(f"Device used: {DEVICE}")
 
-K = np.array([[11.287663,  0.0,       480.0],
-  [ 0.0,       11.287663, 270.0],
-  [ 0.0,       0.0,         1.0]])
+# K = np.array([[11.287663,  0.0,       480.0],
+#   [ 0.0,       11.287663, 270.0],
+#   [ 0.0,       0.0,         1.0]])
 
-# F = 270
-# K = np.array(([F, 0, W//2], [0,F,H//2], [0, 0, 1]))
+F = 270
+K = np.array(([F, 0, W//2], [0,F,H//2], [0, 0, 1]))
 
 def slam():
   args = parse_args()
@@ -46,6 +46,8 @@ def slam():
   extractor = FeatureExtractor(DEVICE)
   matcher = FeatureMatcher(DEVICE)
   map = Map()
+
+  map.create_viewer(W, H, float(K[0, 0]))
 
   while True:
     process_frame(frame, extractor, matcher, display, K, W, H, map)

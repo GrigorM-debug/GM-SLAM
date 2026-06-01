@@ -1,23 +1,21 @@
+import cv2
 import numpy as np
 
-def add_ones(pts):
-  return np.hstack([pts, np.ones((pts.shape[0], 1))])
+def triangulate(K, pose1, pose2, pts1, pts2):
+  if len(pts1) == 0:
+    return np.zeros((0, 4))
 
-def triangulate(pose1, pose2, pts1, pts2):
-  ret = np.zeros((pts1.shape[0], 4))
+  P1 = K @ pose1[:3, :]
+  P2 = K @ pose2[:3, :]
 
-  pose1 = np.linalg.inv(pose1)
-  pose2 = np.linalg.inv(pose2)
+  pts1 = np.asarray(pts1, dtype=np.float64)
+  pts2 = np.asarray(pts2, dtype=np.float64)
 
-  for i, (p1, p2) in enumerate(zip(add_ones(pts1), add_ones(pts2))):
-    A = np.zeros((4, 4))
+  pts4d = cv2.triangulatePoints(
+    P1,
+    P2,
+    pts1.T.reshape(2, -1),
+    pts2.T.reshape(2, -1),
+  )
 
-    A[0] = p1[0] * pose1[2] - pose1[0]
-    A[1] = p1[1] * pose1[2] - pose1[1]
-    A[2] = p2[0] * pose2[2] - pose2[0]
-    A[3] = p2[1] * pose2[2] - pose2[1]
-
-    _, _, vt = np.linalg.svd(A)
-    ret[i] = vt[3]
-
-  return ret
+  return pts4d.T
