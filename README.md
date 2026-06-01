@@ -2,6 +2,8 @@
 
 Monocular feature-based Visual SLAM in Python using Deep Leaning algorithms. A single camera stream is processed frame by frame: learned features are detected and matched, camera motion is estimated from two-view geometry, and 3D map points are triangulated and shown in a live 3D viewer.
 
+![My SLAM](images/slam.png)
+
 ## Overview
 
 The pipeline runs on video input (file or default path under `videos/`):
