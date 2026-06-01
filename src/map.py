@@ -1,41 +1,77 @@
 import numpy as np
-from multiprocessing import Process, Queue
+import rerun as rr
+import rerun.blueprint as rrb
 
 class Map:
+  POINT_RADIUS = 5
+  TRAJECTORY_RADIUS = 2
+
   def __init__(self):
     self.frames = []
     self.points = []
-    self.state = None
-    self.q = None
+    self.initialized = False
+    self.view_width = 1280
+    self.view_height = 720
+    self.focal_length = 420.0
+    self.depth_scale = 1.0
+    self.scale_initialized = False
 
-  def create_viewver(self):
-    self.q = Queue()
-    p = Process(target=self.viewer_thread, args=(self.q,))
-    p.daemon = True
-    p.start()
-  
-  def viewer_thread(self, q):
-    self.viewer_init(1280, 720)
-    while True:
-      self.viewer_refresh(q)
-
-  def viewer_init(self, w, h):
-    pass
-
-  def viewer_refresh(self, q):
-    pass
+  def create_viewer(self, width, height, focal_length):
+    self.view_width = width
+    self.view_height = height
+    self.focal_length = focal_length
+    rr.init("GM_SLAM Map")
+    blueprint = rrb.Blueprint(rrb.Spatial3DView(name="Map", origin="/world"), collapse_panels=True)
+    rr.send_blueprint(blueprint)
+    self.initialized = True
+    rr.spawn()
 
   def display(self):
-    pass
-    # if self.q is None:
-    #   return 
-      
-    # poses, pts = [], []
+    if not self.initialized:
+      return
 
-    # for f in self.frames:
-    #   poses.append(f.pose)
+    poses = [f.pose for f in self.frames]
 
-    # for p in self.points:
-    #   pts.append(p.pt)
-      
-    # self.q.put((np.array(poses), np.array(pts)))
+    if poses:
+      camera_centers = np.array([np.linalg.inv(p)[:3, 3] for p in poses])
+
+      for i, pose in enumerate(poses):
+        Twc = np.linalg.inv(pose)
+        rr.log(
+          f"world/cameras/cam_{i}",
+          rr.Transform3D(translation=Twc[:3, 3], mat3x3=Twc[:3, :3], from_parent=False),
+        )
+        rr.log(
+          f"world/cameras/cam_{i}/pinhole",
+          rr.Pinhole(
+            focal_length=self.focal_length,
+            width=self.view_width,
+            height=self.view_height,
+            camera_xyz=rr.ViewCoordinates.RDF,
+          ),
+        )
+
+      if len(camera_centers) >= 2:
+        rr.log(
+          "world/trajectory",
+          rr.LineStrips3D(
+            strips=[camera_centers],
+            colors=[0, 255, 0],
+            radii=self.TRAJECTORY_RADIUS,
+          ),
+        )
+
+      pts = [p.pt for p in self.points]
+      if pts:
+        pts_array = np.array(pts)
+        if pts_array.ndim == 2 and pts_array.shape[1] == 4:
+          pts_array = pts_array[:, :3] / pts_array[:, 3:4]
+
+        rr.log(
+          "world/map_points",
+          rr.Points3D(
+            pts_array,
+            colors=[[255, 0, 0]],
+            radii=self.POINT_RADIUS,
+          ),
+        )
