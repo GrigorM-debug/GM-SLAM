@@ -2,7 +2,7 @@ import cv2
 import torch
 import numpy as np
 from helpers import parse_args, resolve_video_path
-from frame import process_frame
+from process_frame import process_frame
 from display2d import Display2D
 from extractor import FeatureExtractor
 from matcher import FeatureMatcher
