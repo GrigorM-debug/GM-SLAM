@@ -104,6 +104,7 @@ GM-SLAM/
 
 ## TODOS
 - Saving the map
+- Consider moving the BA optimisation in seperated thread
 - More optimization if needed
 - Loop Closure detection
 - Pose Graph Optimization after loop detection
