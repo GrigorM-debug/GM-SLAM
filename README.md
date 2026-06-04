@@ -3,6 +3,7 @@
 Monocular feature-based Visual SLAM in Python using Deep Leaning algorithms. A single camera stream is processed frame by frame: learned features are detected and matched, camera motion is estimated from two-view geometry, and 3D map points are triangulated and shown in a live 3D viewer.
 
 ![My SLAM](images/slam.png)
+![My SLAM2](images/slam1.png)
 
 ## Overview
 
@@ -93,6 +94,7 @@ GM-SLAM/
 │   ├── display2d.py         # Pygame 2D viewer
 │   ├── frame.py / point.py  # Map entities
 │   ├── helpers.py           # CLI and video path resolution
+    |-- optimize.py          # Local Bundle Adjusment optimization
 │   └── camera/
 │       └── calibrate-camera.py
 ├── videos/                  # Input videos (gitignored)
@@ -100,8 +102,7 @@ GM-SLAM/
 ```
 
 ## TODOS
-- I don't why but in the Rerun viewer the map is a little bit vertical so i will try to fix it 
-- Bundle adjustment back-end optimization
+- More optimization if needed
 - Loop Closure detection
 - Pose Graph Optimization after loop detection
 

@@ -1,6 +1,6 @@
 import cv2
 from pose_estimation import estimate_camera_pose, estimate_3d_point_position
-from optimize import optimize_map, BA_INTERVAL, MIN_FRAMES
+from optimize import optimize_map, BA_CHECK_INTERVAL, MIN_FRAMES
 
 def process_frame(img, extractor, matcher, display, K, W, H, map):
   img = cv2.resize(img, (W, H))
@@ -38,7 +38,7 @@ def process_frame(img, extractor, matcher, display, K, W, H, map):
 
   estimate_3d_point_position(map, img, K, pts_prev, pts_curr, R, t, inlier_mask, pose_mask)
 
-  if len(map.frames) >= MIN_FRAMES and len(map.frames) % BA_INTERVAL == 0:
+  if len(map.frames) >= MIN_FRAMES and len(map.frames) % BA_CHECK_INTERVAL == 0:
     optimize_map(map, K)
 
   display.paint(vis)
