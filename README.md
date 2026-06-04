@@ -102,6 +102,7 @@ GM-SLAM/
 ```
 
 ## TODOS
+- Saving the map
 - More optimization if needed
 - Loop Closure detection
 - Pose Graph Optimization after loop detection
