@@ -4,6 +4,7 @@ Monocular feature-based Visual SLAM in Python using Deep Leaning algorithms. A s
 
 ![My SLAM](images/slam.png)
 ![My SLAM2](images/slam1.png)
+![My SLAM3](images/slam3.jpg)
 
 ## Overview
 
