@@ -31,7 +31,7 @@ def estimate_camera_pose(pts_prev, pts_curr, K):
   return inlier_mask, R, t, pose_mask
 
 
-def _triangulate_to_world(K, pose1, pose2, pts1, pts2):
+def triangulate_to_world(K, pose1, pose2, pts1, pts2):
   pts4d = triangulate(K, pose1, pose2, pts1, pts2)
   w = pts4d[:, 3]
   valid = np.isfinite(pts4d).all(axis=1) & (np.abs(w) > 1e-8)
@@ -40,8 +40,8 @@ def _triangulate_to_world(K, pose1, pose2, pts1, pts2):
   return pts3d, valid
 
 
-def _median_scene_depth(K, pose1, pose2, pts1, pts2):
-  pts3d, valid = _triangulate_to_world(K, pose1, pose2, pts1, pts2)
+def median_scene_depth(K, pose1, pose2, pts1, pts2):
+  pts3d, valid = triangulate_to_world(K, pose1, pose2, pts1, pts2)
   depths = []
   for p in pts3d[valid]:
     z = (pose1 @ np.append(p, 1.0))[2]
@@ -73,7 +73,7 @@ def estimate_3d_point_position(map, img, K, pts_prev, pts_curr, R, t, inlier_mas
     rel_unit = relative.copy()
     rel_unit[:3, 3] = t_vec
     provisional = rel_unit @ prev_pose
-    depth = _median_scene_depth(K, prev_pose, provisional, pts1, pts2)
+    depth = median_scene_depth(K, prev_pose, provisional, pts1, pts2)
     if depth is not None and depth > 1e-3:
       map.depth_scale = depth
       map.scale_initialized = True
@@ -85,7 +85,7 @@ def estimate_3d_point_position(map, img, K, pts_prev, pts_curr, R, t, inlier_mas
   f1 = map.frames[-2]
   f2 = map.frames[-1]
 
-  pts3d, valid = _triangulate_to_world(K, f1.pose, f2.pose, pts1, pts2)
+  pts3d, valid = triangulate_to_world(K, f1.pose, f2.pose, pts1, pts2)
 
   for i, p in enumerate(pts3d):
     if not valid[i]:
@@ -95,6 +95,6 @@ def estimate_3d_point_position(map, img, K, pts_prev, pts_curr, R, t, inlier_mas
       continue
 
     point = Point(map, X)
-    point.add_observation(f1, i)
-    point.add_observation(f2, i)
+    point.add_observation(f1, pts1[i])
+    point.add_observation(f2, pts2[i])
     map.points.append(point)

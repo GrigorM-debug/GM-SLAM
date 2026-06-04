@@ -1,13 +1,14 @@
+import numpy as np
 
 # A 3D point in the map
 class Point:
   def __init__(self, map, loc):
     self.frames = []
     self.pt = loc
-    self.idxs = []
+    self.observations = []
     self.id = len(map.points)
 
-  def add_observation(self, frame, idx):
+  def add_observation(self, frame, uv):
     self.frames.append(frame)
-    self.idxs.append(idx)
+    self.observations.append(np.asarray(uv, dtype=np.float64))
 
