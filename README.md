@@ -103,7 +103,7 @@ GM-SLAM/
     |-- optimize.py          # Local Bundle Adjusment optimization
 │   └── camera/
 │       └── calibrate-camera.py
-    --- load_map.py # Script of loading saved map and map data in the Rerun Viewer
+    --- load_map.py # Script for loading saved map and map data in the Rerun Viewer
 ├── videos/                  # Input videos (gitignored)
 └── requirements.txt
 ```
