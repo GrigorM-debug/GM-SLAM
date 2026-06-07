@@ -1,7 +1,7 @@
 import cv2
 import torch
 import numpy as np
-from helpers import parse_args, resolve_video_path
+from helpers import parse_args, resolve_video_path, resolve_output_path
 from process_frame import process_frame
 from display2d import Display2D
 from extractor import FeatureExtractor
@@ -59,6 +59,9 @@ def slam():
     
     if not ret or frame is None:
       break
+
+  output_path = resolve_output_path(args.output, video_path)
+  map.save(output_path, K)
 
   cap.release()
   cv2.destroyAllWindows()

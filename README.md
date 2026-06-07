@@ -77,7 +77,12 @@ python -m rerun
 
 Then you start the slam using the command:
 ```bash
-python slam.py "../videos/video4.mp4"
+python src/slam.py "../videos/video4.mp4"
+```
+Loading saved map and map data: 
+Example: 
+```bash
+python src/load_map.py "maps/video10_20260607_123159.npz"
 ```
 
 ## Project structure
@@ -91,19 +96,19 @@ GM-SLAM/
 │   ├── matcher.py           # LightGlue matching + 2D overlay
 │   ├── pose_estimation.py   # Essential matrix, pose, triangulation into map
 │   ├── triangulate.py       # Two-view triangulation
-│   ├── map.py               # Frames, points, Rerun 3D view
+│   ├── map.py               # Frames, points, Rerun 3D view, logic for saving and loading the map
 │   ├── display2d.py         # Pygame 2D viewer
 │   ├── frame.py / point.py  # Map entities
 │   ├── helpers.py           # CLI and video path resolution
     |-- optimize.py          # Local Bundle Adjusment optimization
 │   └── camera/
 │       └── calibrate-camera.py
+    --- load_map.py # Script of loading saved map and map data in the Rerun Viewer
 ├── videos/                  # Input videos (gitignored)
 └── requirements.txt
 ```
 
 ## TODOS
-- Saving the map
 - Consider moving the BA optimisation in seperated thread
 - More optimization if needed
 - Loop Closure detection

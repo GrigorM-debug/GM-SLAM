@@ -12,7 +12,7 @@ from scipy.sparse import lil_matrix
 # BA_WINDOW = 10
 
 
-BA_CHECK_INTERVAL = 30  # how often to measure reprojection error
+BA_CHECK_INTERVAL = 10  # how often to measure reprojection error
 BA_WINDOW = 5
 REPROJ_ERROR_THRESHOLD = 0.5  # px; skip BA when error is at or below this
 
