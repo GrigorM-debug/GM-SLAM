@@ -5,6 +5,7 @@ from optimize import optimize_map, BA_CHECK_INTERVAL, MIN_FRAMES
 def process_frame(img, extractor, matcher, display, K, W, H, map):
   img = cv2.resize(img, (W, H))
   feats = extractor.extract(img)
+  frame = img.copy()
 
   vis, n_good, n_kpts, pts_prev, pts_curr = matcher.match_and_draw(img, feats)
 
@@ -36,7 +37,7 @@ def process_frame(img, extractor, matcher, display, K, W, H, map):
     map.display()
     return
 
-  estimate_3d_point_position(map, img, K, pts_prev, pts_curr, R, t, inlier_mask, pose_mask)
+  estimate_3d_point_position(map, frame, K, pts_prev, pts_curr, R, t, inlier_mask, pose_mask)
 
   if len(map.frames) >= MIN_FRAMES and len(map.frames) % BA_CHECK_INTERVAL == 0:
     optimize_map(map, K)

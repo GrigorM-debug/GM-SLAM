@@ -4,7 +4,6 @@ from frame import Frame
 from point import Point
 from triangulate import triangulate
 
-
 def estimate_camera_pose(pts_prev, pts_curr, K):
   if pts_prev is None or pts_curr is None:
     return None, None, None, None
@@ -51,8 +50,14 @@ def median_scene_depth(K, pose1, pose2, pts1, pts2):
     return None
   return float(np.median(depths))
 
+def sample_pixel_color(frame, uv):
+  x, y = int(round(uv[0])), int(round(uv[1]))
+  x = np.clip(x, 0, frame.shape[1] - 1)
+  y = np.clip(y, 0, frame.shape[0] - 1)
+  b, g, r = frame[y, x]
+  return np.array([r, g, b], dtype=np.uint8)
 
-def estimate_3d_point_position(map, img, K, pts_prev, pts_curr, R, t, inlier_mask, pose_mask):
+def estimate_3d_point_position(map, frame, K, pts_prev, pts_curr, R, t, inlier_mask, pose_mask):
   t_vec = t.flatten()
 
   mask = (inlier_mask.ravel() > 0) & (pose_mask.ravel() > 0)
@@ -65,7 +70,7 @@ def estimate_3d_point_position(map, img, K, pts_prev, pts_curr, R, t, inlier_mas
   relative[:3, :3] = R
 
   if len(map.frames) == 0:
-    map.frames.append(Frame(map, img, K, pose=np.eye(4)))
+    map.frames.append(Frame(map, frame, K, pose=np.eye(4)))
 
   prev_pose = map.frames[-1].pose
 
@@ -80,7 +85,7 @@ def estimate_3d_point_position(map, img, K, pts_prev, pts_curr, R, t, inlier_mas
 
   relative[:3, 3] = t_vec * map.depth_scale
   new_pose = relative @ prev_pose
-  map.frames.append(Frame(map, img, K, pose=new_pose))
+  map.frames.append(Frame(map, frame, K, pose=new_pose))
 
   f1 = map.frames[-2]
   f2 = map.frames[-1]
@@ -94,7 +99,8 @@ def estimate_3d_point_position(map, img, K, pts_prev, pts_curr, R, t, inlier_mas
     if (f1.pose @ X)[2] <= 0 or (f2.pose @ X)[2] <= 0:
       continue
 
-    point = Point(map, X)
+    color = sample_pixel_color(frame, pts2[i])
+    point = Point(map, X, color)
     point.add_observation(f1, pts1[i])
     point.add_observation(f2, pts2[i])
     map.points.append(point)

@@ -3,7 +3,7 @@ import rerun as rr
 import rerun.blueprint as rrb
 from pathlib import Path
 
-MAP_SAVE_VERSION = 1
+MAP_SAVE_VERSION = 2
 
 class _PoseFrame:
   __slots__ = ("pose",)
@@ -12,10 +12,11 @@ class _PoseFrame:
     self.pose = pose
 
 class _MapPoint:
-  __slots__ = ("pt",)
+  __slots__ = ("pt", "color")
 
-  def __init__(self, pt):
+  def __init__(self, pt, color):
     self.pt = pt
+    self.color = color
 
 class Map:
   POINT_RADIUS = 5
@@ -82,11 +83,13 @@ class Map:
         if pts_array.ndim == 2 and pts_array.shape[1] == 4:
           pts_array = pts_array[:, :3] / pts_array[:, 3:4]
 
+        colors = np.array([p.color for p in self.points], dtype=np.uint8)
+
         rr.log(
           "world/map_points",
           rr.Points3D(
             pts_array,
-            colors=[[255, 0, 0]],
+            colors=colors,
             radii=self.POINT_RADIUS,
           ),
         )
@@ -109,8 +112,10 @@ class Map:
 
     if self.points:
       points = np.array([p.pt for p in self.points], dtype=np.float64)
+      colors = np.array([p.color for p in self.points], dtype=np.uint8)
     else:
       points = np.zeros((0, 4), dtype=np.float64)
+      colors = np.zeros((0, 3), dtype=np.uint8)
 
     frame_to_idx = {f: i for i, f in enumerate(self.frames)}
     obs_frame_idx = []
@@ -136,6 +141,7 @@ class Map:
       poses=poses,
       camera_centers=camera_centers,
       points=points,
+      colors=colors,
       obs_frame_idx=np.array(obs_frame_idx, dtype=np.int32),
       obs_point_idx=np.array(obs_point_idx, dtype=np.int32),
       obs_uv=np.array(obs_uv, dtype=np.float64)
@@ -174,7 +180,17 @@ class Map:
     map_obj.view_height = int(data["view_height"][0])
     map_obj.focal_length = float(data["focal_length"][0])
     map_obj.frames = [_PoseFrame(pose) for pose in data["poses"]]
-    map_obj.points = [_MapPoint(pt) for pt in data["points"]]
+
+    default_color = np.array([255, 0, 0], dtype=np.uint8)
+    if "colors" in data:
+      point_colors = data["colors"]
+    else:
+      point_colors = np.tile(default_color, (len(data["points"]), 1))
+
+    map_obj.points = [
+      _MapPoint(pt, color)
+      for pt, color in zip(data["points"], point_colors)
+    ]
 
     print(f"[INFO] Map loaded from {path}")
     print(
