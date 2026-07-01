@@ -18,6 +18,11 @@ def parse_args():
     default=None,
     help="Path to save the map (.npz). Defaults to maps/<video_name>_<timestamp>.npz",
   )
+  parser.add_argument(
+    "--semantic",
+    action="store_true",
+    help="Enable semantic segmentation. Default is disabled (False).",
+  )
   return parser.parse_args()
 
 

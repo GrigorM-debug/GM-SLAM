@@ -7,6 +7,7 @@ from display2d import Display2D
 from extractor import FeatureExtractor
 from matcher import FeatureMatcher
 from map import Map
+from semantic_slam import FrameSegmenter, SemanticDisplay2D
 
 W = 1920//2
 H = 1080//2
@@ -46,11 +47,29 @@ def slam():
   extractor = FeatureExtractor(DEVICE)
   matcher = FeatureMatcher(DEVICE)
   map = Map()
+  semantic_display = None
+  segmenter = None
+
+  if args.semantic:
+    print("[INFO] Semantic segmentation enabled.")
+    segmenter = FrameSegmenter(DEVICE)
+    semantic_display = SemanticDisplay2D(W, H)
 
   map.create_viewer(W, H, float(K[0, 0]))
 
   while True:
-    process_frame(frame, extractor, matcher, display, K, W, H, map)
+    process_frame(
+      frame,
+      extractor,
+      matcher,
+      display,
+      K,
+      W,
+      H,
+      map,
+      segmenter=segmenter,
+      semantic_display=semantic_display,
+    )
 
     if cv2.waitKey(1) == ord('q'):
       break

@@ -12,11 +12,21 @@ class _PoseFrame:
     self.pose = pose
 
 class _MapPoint:
-  __slots__ = ("pt", "color")
+  __slots__ = ("pt", "color", "semantic_label", "semantic_name", "semantic_color")
 
-  def __init__(self, pt, color):
+  def __init__(
+    self,
+    pt,
+    color,
+    semantic_label=None,
+    semantic_name=None,
+    semantic_color=None,
+  ):
     self.pt = pt
     self.color = color
+    self.semantic_label = semantic_label
+    self.semantic_name = semantic_name
+    self.semantic_color = semantic_color
 
 class Map:
   POINT_RADIUS = 5
@@ -93,6 +103,29 @@ class Map:
             radii=self.POINT_RADIUS,
           ),
         )
+
+        semantic_points = [
+          p for p in self.points
+          if getattr(p, "semantic_color", None) is not None
+        ]
+        if semantic_points:
+          semantic_pts = np.array([p.pt for p in semantic_points])
+          if semantic_pts.ndim == 2 and semantic_pts.shape[1] == 4:
+            semantic_pts = semantic_pts[:, :3] / semantic_pts[:, 3:4]
+
+          semantic_colors = np.array(
+            [p.semantic_color for p in semantic_points],
+            dtype=np.uint8,
+          )
+
+          rr.log(
+            "world/semantic_points",
+            rr.Points3D(
+              semantic_pts,
+              colors=semantic_colors,
+              radii=self.POINT_RADIUS * 1.5,
+            ),
+          )
 
   def save(self, path, K):
     path = Path(path)

@@ -57,7 +57,19 @@ def sample_pixel_color(frame, uv):
   b, g, r = frame[y, x]
   return np.array([r, g, b], dtype=np.uint8)
 
-def estimate_3d_point_position(map, frame, K, pts_prev, pts_curr, R, t, inlier_mask, pose_mask):
+def estimate_3d_point_position(
+  map,
+  frame,
+  K,
+  pts_prev,
+  pts_curr,
+  R,
+  t,
+  inlier_mask,
+  pose_mask,
+  segmenter=None,
+  segmentation_map=None,
+):
   t_vec = t.flatten()
 
   mask = (inlier_mask.ravel() > 0) & (pose_mask.ravel() > 0)
@@ -100,7 +112,18 @@ def estimate_3d_point_position(map, frame, K, pts_prev, pts_curr, R, t, inlier_m
       continue
 
     color = sample_pixel_color(frame, pts2[i])
-    point = Point(map, X, color)
+    semantic_info = None
+    if segmenter is not None and segmentation_map is not None:
+      semantic_info = segmenter.sample_target_class(segmentation_map, pts2[i])
+
+    point = Point(
+      map,
+      X,
+      color,
+      semantic_label=None if semantic_info is None else semantic_info["label"],
+      semantic_name=None if semantic_info is None else semantic_info["name"],
+      semantic_color=None if semantic_info is None else semantic_info["color"],
+    )
     point.add_observation(f1, pts1[i])
     point.add_observation(f2, pts2[i])
     map.points.append(point)
