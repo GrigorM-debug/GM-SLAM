@@ -1,6 +1,4 @@
 import cv2
-
-
 class SemanticDisplay2D:
   def __init__(self, width, height, title="GM-SLAM Semantic View"):
     self.width = width

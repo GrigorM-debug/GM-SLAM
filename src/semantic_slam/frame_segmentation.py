@@ -4,7 +4,13 @@ import torch
 import torchvision.models.segmentation as seg_models
 
 class FrameSegmenter:
-  TARGET_CLASS_NAMES = {"person", "bicycle", "car", "motorbike", "bus"}
+  TARGET_CLASS_NAMES = {
+    "person", 
+    "bicycle", 
+    "car", 
+    "motorbike", 
+    "bus"
+  }
   HIGHLIGHT_RGB_COLORS = {
     "person": (255, 105, 180),
     "bicycle": (180, 0, 255),
@@ -21,7 +27,7 @@ class FrameSegmenter:
     self.preprocess = self.weights.transforms()
     self.model = seg_models.deeplabv3_resnet50(weights=self.weights)
     self.model.eval().to(self.device)
-    self.palette = self._build_high_contrast_palette()
+    self.palette = self.build_high_contrast_palette()
     self.palette_bgr = self.palette[:, ::-1].copy()
     self.target_labels = {
       label_id
@@ -57,7 +63,7 @@ class FrameSegmenter:
 
     detected_labels = np.unique(segmentation_map)
     detected_labels = [label for label in detected_labels if label != 0]
-    self._draw_legend(blended, detected_labels)
+    self.draw_legend(blended, detected_labels)
     return blended
 
   def sample_target_class(self, segmentation_map, uv):
@@ -75,7 +81,7 @@ class FrameSegmenter:
       "color": self.palette[label_id].copy(),
     }
 
-  def _draw_legend(self, frame, label_ids):
+  def draw_legend(self, frame, label_ids):
     y = 20
     for label_id in label_ids[:8]:
       color = tuple(int(c) for c in self.palette_bgr[label_id])
@@ -94,7 +100,7 @@ class FrameSegmenter:
       y += 28
 
   @staticmethod
-  def _build_palette(num_classes):
+  def build_palette(num_classes):
     palette = np.zeros((num_classes, 3), dtype=np.uint8)
     for label_id in range(num_classes):
       palette[label_id] = (
@@ -105,8 +111,8 @@ class FrameSegmenter:
     palette[0] = (0, 0, 0)
     return palette
 
-  def _build_high_contrast_palette(self):
-    palette = self._build_palette(len(self.categories))
+  def build_high_contrast_palette(self):
+    palette = self.build_palette(len(self.categories))
     for label_id, class_name in enumerate(self.categories):
       if class_name in self.HIGHLIGHT_RGB_COLORS:
         palette[label_id] = self.HIGHLIGHT_RGB_COLORS[class_name]
