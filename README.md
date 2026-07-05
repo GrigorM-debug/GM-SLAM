@@ -2,12 +2,12 @@
 
 Monocular feature-based Visual SLAM in Python using Deep Leaning algorithms. A single camera stream is processed frame by frame: learned features are detected and matched, camera motion is estimated from two-view geometry, and 3D map points are triangulated and shown in a live 3D viewer.
 
-![MySLAM](images/slam3.png)
-![MySLAM](images/slam4.png)
-![MySLAM](images/slam5.png)
-![My SLAM](images/slam.png)
-![My SLAM2](images/slam1.png)
-![My SLAM3](images/slam3.jpg)
+![MySLAM1](images/slam3.png)
+![MySLAM2](images/slam4.png)
+![MySLA3](images/slam5.png)
+![My SLAM4](images/slam8.png)
+![My SLAM5](images/slam9.png)
+![My SLAM6](images/slam10.png)
 
 ## Overview
 
@@ -20,6 +20,24 @@ The pipeline runs on video input (file or default path under `videos/`):
 5. **Mapping** — triangulation of inlier matches; scale from median scene depth on the second frame.
 6. **Visualization** — 2D match view (Pygame) and 3D map / camera trajectory ([Rerun](https://rerun.io/)).
 
+## Semantic SLAM (small attempt)
+
+This is a lightweight experiment on top of the core SLAM pipeline — not full semantic SLAM, but a first step toward labeling the map with object classes.
+
+When enabled with `--semantic`, each frame is run through **DeepLabV3** (ResNet-50, torchvision, COCO classes). A second Pygame window shows a color overlay for a few dynamic classes: person, bicycle, car, motorbike, and bus.
+
+On the mapping side, semantics are attached only where the SLAM pipeline already creates 3D points: when a new map point is triangulated from matched keypoints, the class at that pixel is sampled from the segmentation mask. Those points are drawn in Rerun as a separate colored layer (`world/semantic_points`), on top of the normal map.
+
+![Semantic](images/slam6.png)
+![Semantic2](images/slam7.png)
+
+**Limitations (by design for now):**
+
+- Labels come from sparse feature locations, not from the full segmentation mask — so cars and other objects appear as scattered colored points, not solid shapes.
+- No instance tracking, dense semantic fusion, or object bounding boxes in 3D.
+- Semantic metadata is not saved in the `.npz` map file yet.
+
+It is useful for exploring how class labels could sit on a monocular map, but it should be read as a prototype rather than a finished semantic mapping module.
 
 ## Libraries
 
@@ -29,6 +47,7 @@ The pipeline runs on video input (file or default path under `videos/`):
 | OpenCV | Video I/O, essential matrix, pose recovery, triangulation, calibration |
 | PyTorch | GPU/CPU backend for learned features and matching |
 | LightGlue | ALIKED extractor and LightGlue matcher between frames |
+| Torchvision | DeepLabV3 semantic segmentation (optional `--semantic` mode) |
 | Rerun | Live 3D viewer for map points, camera poses, and trajectory |
 | Pygame | 2D display window with match visualization and FPS |
 
@@ -82,7 +101,13 @@ Then you start the slam using the command:
 ```bash
 python src/slam.py "../videos/video4.mp4"
 ```
-Loading saved map and map data: 
+
+Optional semantic overlay and 3D class-colored points ([Semantic SLAM (small attempt)](#semantic-slam-small-attempt)):
+```bash
+python src/slam.py "../videos/video4.mp4" --semantic
+```
+
+Loading saved map and map data:
 Example: 
 ```bash
 python src/load_map.py "maps/video10_20260607_123159.npz"
@@ -103,7 +128,10 @@ GM-SLAM/
 │   ├── display2d.py         # Pygame 2D viewer
 │   ├── frame.py / point.py  # Map entities
 │   ├── helpers.py           # CLI and video path resolution
-    |-- optimize.py          # Local Bundle Adjusment optimization
+│   ├── optimize.py          # Local Bundle Adjustment optimization
+│   ├── semantic_slam/       # Optional semantic segmentation (DeepLabV3)
+│   │   ├── frame_segmentation.py
+│   │   └── display2d.py
 │   └── camera/
 │       └── calibrate-camera.py
     --- load_map.py # Script for loading saved map and map data in the Rerun Viewer
