@@ -1,6 +1,6 @@
 import cv2
 from pose_estimation import estimate_camera_pose, estimate_3d_point_position
-from optimize import optimize_map, BA_CHECK_INTERVAL, MIN_FRAMES
+from optimize import BA_CHECK_INTERVAL, MIN_FRAMES
 
 def process_frame(
   img,
@@ -13,9 +13,14 @@ def process_frame(
   map,
   segmenter=None,
   semantic_display=None,
+  ba_worker=None,
 ):
   img = cv2.resize(img, (W, H))
   feats = extractor.extract(img)
+
+  if ba_worker is not None:
+    ba_worker.apply_results(map)
+
   frame = img.copy()
   semantic_frame = None
   segmentation_map = None
@@ -68,8 +73,10 @@ def process_frame(
     segmentation_map=segmentation_map,
   )
 
-  if len(map.frames) >= MIN_FRAMES and len(map.frames) % BA_CHECK_INTERVAL == 0:
-    optimize_map(map, K)
+  # First BA once MIN_FRAMES is reached, then every BA_CHECK_INTERVAL new frames.
+  frames_since_min = len(map.frames) - MIN_FRAMES
+  if ba_worker is not None and frames_since_min >= 0 and frames_since_min % BA_CHECK_INTERVAL == 0:
+    ba_worker.try_start(map, K)
 
   display.paint(vis)
   if semantic_display is not None and semantic_frame is not None:

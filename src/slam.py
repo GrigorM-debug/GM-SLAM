@@ -7,6 +7,7 @@ from display2d import Display2D
 from extractor import FeatureExtractor
 from matcher import FeatureMatcher
 from map import Map
+from optimize import BAWorker
 from semantic_slam import FrameSegmenter, SemanticDisplay2D
 
 W = 1920//2
@@ -47,6 +48,7 @@ def slam():
   extractor = FeatureExtractor(DEVICE)
   matcher = FeatureMatcher(DEVICE)
   map = Map()
+  ba_worker = BAWorker()
   semantic_display = None
   segmenter = None
 
@@ -69,6 +71,7 @@ def slam():
       map,
       segmenter=segmenter,
       semantic_display=semantic_display,
+      ba_worker=ba_worker,
     )
 
     if cv2.waitKey(1) == ord('q'):
@@ -78,6 +81,9 @@ def slam():
     
     if not ret or frame is None:
       break
+
+  ba_worker.shutdown()
+  ba_worker.apply_results(map)
 
   output_path = resolve_output_path(args.output, video_path)
   map.save(output_path, K)
