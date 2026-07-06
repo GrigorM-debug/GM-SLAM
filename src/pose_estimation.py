@@ -50,6 +50,34 @@ def median_scene_depth(K, pose1, pose2, pts1, pts2):
     return None
   return float(np.median(depths))
 
+def camera_center(pose):
+  return np.linalg.inv(pose)[:3, 3]
+
+
+def chain_pose(prev_pose, relative, reverse=False, prev_motion=None):
+  new_pose = relative @ prev_pose
+  if not reverse:
+    motion = camera_center(new_pose) - camera_center(prev_pose)
+    return new_pose, motion
+
+  alt_pose = np.linalg.inv(relative) @ prev_pose
+  motion = camera_center(new_pose) - camera_center(prev_pose)
+  alt_motion = camera_center(alt_pose) - camera_center(prev_pose)
+
+  if prev_motion is not None and np.linalg.norm(prev_motion) > 1e-6:
+    forward_dot = np.dot(motion, prev_motion)
+    alt_dot = np.dot(alt_motion, prev_motion)
+    if forward_dot < 0 and alt_dot >= 0:
+      return alt_pose, alt_motion
+    if forward_dot >= 0 and alt_dot < 0:
+      return new_pose, motion
+
+  if np.linalg.norm(alt_motion) > np.linalg.norm(motion):
+    return alt_pose, alt_motion
+
+  return new_pose, motion
+
+
 def sample_pixel_color(frame, uv):
   x, y = int(round(uv[0])), int(round(uv[1]))
   x = np.clip(x, 0, frame.shape[1] - 1)
@@ -69,6 +97,7 @@ def estimate_3d_point_position(
   pose_mask,
   segmenter=None,
   segmentation_map=None,
+  reverse=False,
 ):
   t_vec = t.flatten()
 
@@ -96,7 +125,13 @@ def estimate_3d_point_position(
       map.scale_initialized = True
 
   relative[:3, 3] = t_vec * map.depth_scale
-  new_pose = relative @ prev_pose
+  new_pose, motion = chain_pose(
+    prev_pose,
+    relative,
+    reverse=reverse,
+    prev_motion=map.last_motion,
+  )
+  map.last_motion = motion
   map.frames.append(Frame(map, frame, K, pose=new_pose))
 
   f1 = map.frames[-2]

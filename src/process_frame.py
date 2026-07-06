@@ -14,6 +14,7 @@ def process_frame(
   segmenter=None,
   semantic_display=None,
   ba_worker=None,
+  reverse=False,
 ):
   img = cv2.resize(img, (W, H))
   feats = extractor.extract(img)
@@ -71,11 +72,17 @@ def process_frame(
     pose_mask,
     segmenter=segmenter,
     segmentation_map=segmentation_map,
+    reverse=reverse,
   )
 
   # First BA once MIN_FRAMES is reached, then every BA_CHECK_INTERVAL new frames.
   frames_since_min = len(map.frames) - MIN_FRAMES
-  if ba_worker is not None and frames_since_min >= 0 and frames_since_min % BA_CHECK_INTERVAL == 0:
+  if (
+    ba_worker is not None
+    and not reverse
+    and frames_since_min >= 0
+    and frames_since_min % BA_CHECK_INTERVAL == 0
+  ):
     ba_worker.try_start(map, K)
 
   display.paint(vis)

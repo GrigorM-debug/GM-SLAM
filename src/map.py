@@ -41,6 +41,7 @@ class Map:
     self.focal_length = 420.0
     self.depth_scale = 1.0
     self.scale_initialized = False
+    self.last_motion = None
 
   def create_viewer(self, width, height, focal_length):
     self.view_width = width

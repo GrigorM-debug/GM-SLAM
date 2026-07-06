@@ -61,10 +61,20 @@ def slam():
     frame_index = 0
     step = 1
 
-  cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
-  ret, frame = cap.read()
-  
-  if not ret or frame is None:
+  def read_frame_at(index):
+    cap.set(cv2.CAP_PROP_POS_FRAMES, index)
+    ret, img = cap.read()
+    if not ret or img is None:
+      return False, None
+    actual_index = int(cap.get(cv2.CAP_PROP_POS_FRAMES)) - 1
+    if abs(actual_index - index) > 1:
+      print(
+        f"[WARN] Seek requested frame {index}, decoder landed near frame {actual_index}."
+      )
+    return True, img
+
+  ret, frame = read_frame_at(frame_index)
+  if not ret:
     print("[ERROR] Failed to read the first frame.")
     cap.release()
     return
@@ -84,6 +94,7 @@ def slam():
       segmenter=segmenter,
       semantic_display=semantic_display,
       ba_worker=ba_worker,
+      reverse=args.reverse,
     )
 
     if cv2.waitKey(1) == ord('q'):
@@ -93,9 +104,17 @@ def slam():
     if frame_index < 0 or frame_index >= total_frames:
       break
 
-    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
-    ret, frame = cap.read()
-    if not ret or frame is None:
+    last_processed = frame.copy()
+    ret, frame = read_frame_at(frame_index)
+    if not ret:
+      break
+
+    frame_diff = np.mean(np.abs(frame.astype(np.float32) - last_processed.astype(np.float32)))
+    if frame_diff < 1.0:
+      print(
+        f"[WARN] Duplicate frame at index {frame_index}; "
+        "reverse seeking may be unreliable for this video."
+      )
       break
 
   ba_worker.shutdown()
