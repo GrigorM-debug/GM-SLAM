@@ -51,7 +51,7 @@ def process_frame(
     cv2.LINE_AA,
   )
 
-  inlier_mask, R, t, pose_mask = estimate_camera_pose(pts_prev, pts_curr, K)
+  inlier_mask, R, t, pose_mask = estimate_camera_pose(pts_prev, pts_curr, K, reverse=reverse)
 
   if R is None or t is None:
     display.paint(vis)
