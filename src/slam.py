@@ -16,10 +16,6 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 print(f"Device used: {DEVICE}")
 
-# K = np.array([[11.287663,  0.0,       480.0],
-#   [ 0.0,       11.287663, 270.0],
-#   [ 0.0,       0.0,         1.0]])
-
 F = 270
 K = np.array(([F, 0, W//2], [0,F,H//2], [0, 0, 1]))
 
@@ -38,8 +34,8 @@ def slam():
     print("[ERROR] OpenCV failed to open the video.")
     return
 
-  ret, frame = cap.read()
-  if not ret or frame is None:
+  total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+  if total_frames <= 0:
     print("[ERROR] Video opened but no readable frames were found.")
     cap.release()
     return
@@ -56,6 +52,22 @@ def slam():
     print("[INFO] Semantic segmentation enabled.")
     segmenter = FrameSegmenter(DEVICE)
     semantic_display = SemanticDisplay2D(W, H)
+
+  if args.reverse:
+    print("[INFO] Reversing the video.")
+    frame_index = total_frames - 1
+    step = -1
+  else:
+    frame_index = 0
+    step = 1
+
+  cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
+  ret, frame = cap.read()
+  
+  if not ret or frame is None:
+    print("[ERROR] Failed to read the first frame.")
+    cap.release()
+    return
 
   map.create_viewer(W, H, float(K[0, 0]))
 
@@ -76,9 +88,13 @@ def slam():
 
     if cv2.waitKey(1) == ord('q'):
       break
-    
+
+    frame_index += step
+    if frame_index < 0 or frame_index >= total_frames:
+      break
+
+    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)
     ret, frame = cap.read()
-    
     if not ret or frame is None:
       break
 

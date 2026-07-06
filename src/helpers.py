@@ -23,6 +23,11 @@ def parse_args():
     action="store_true",
     help="Enable semantic segmentation. Default is disabled (False).",
   )
+  parser.add_argument(
+    "--reverse",
+    action="store_true",
+    help="Reverse the video. Default is disabled (False).",
+  )
   return parser.parse_args()
 
 
