@@ -39,6 +39,29 @@ On the mapping side, semantics are attached only where the SLAM pipeline already
 
 It is useful for exploring how class labels could sit on a monocular map, but it should be read as a prototype rather than a finished semantic mapping module.
 
+## Reverse video
+
+Optional playback from last frame to first with `--reverse`. The SLAM pipeline is unchanged — frames are still matched consecutively in processing order — but the video is read backward via explicit frame seeking.
+
+Pose chaining uses motion-direction consistency so translation does not flip frame to frame when playing in reverse. Local bundle adjustment is disabled in this mode because it assumes forward odometry.
+
+**Limitations:**
+
+- Reverse seeking depends on the video codec; some files may return duplicate frames and playback will stop early with a warning.
+- The recovered trajectory is anchored at the last video frame (identity pose), not the first.
+
+Run with:
+
+```bash
+python src/slam.py "../videos/video4.mp4" --reverse
+```
+
+Combine with semantic mode if needed:
+
+```bash
+python src/slam.py "../videos/video4.mp4" --reverse --semantic
+```
+
 ## Libraries
 
 | Library | Role in this project |
@@ -105,6 +128,11 @@ python src/slam.py "../videos/video4.mp4"
 Optional semantic overlay and 3D class-colored points ([Semantic SLAM (small attempt)](#semantic-slam-small-attempt)):
 ```bash
 python src/slam.py "../videos/video4.mp4" --semantic
+```
+
+Reverse playback from last frame to first ([Reverse video](#reverse-video)):
+```bash
+python src/slam.py "../videos/video4.mp4" --reverse
 ```
 
 Loading saved map and map data:
