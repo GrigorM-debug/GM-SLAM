@@ -55,11 +55,6 @@ def median_scene_depth(K, pose1, pose2, pts1, pts2):
     return None
   return float(np.median(depths))
 
-MIN_TRIANGULATION_BASELINE = 1e-3
-MAX_POINT_DEPTH = 300.0
-MIN_POINT_DEPTH = 0.1
-
-
 def camera_center(pose):
   return np.linalg.inv(pose)[:3, 3]
 
@@ -122,10 +117,11 @@ def estimate_3d_point_position(
 
   f1 = map.frames[-2]
   f2 = map.frames[-1]
-
-  baseline = np.linalg.norm(camera_center(f2.pose) - camera_center(f1.pose))
-  if baseline < MIN_TRIANGULATION_BASELINE:
-    return
+  
+  if reverse:
+    baseline = np.linalg.norm(camera_center(f2.pose) - camera_center(f1.pose))
+    if baseline < 1e-3:
+      return
 
   pts3d, valid = triangulate_to_world(K, f1.pose, f2.pose, pts1, pts2)
 
@@ -133,12 +129,14 @@ def estimate_3d_point_position(
     if not valid[i]:
       continue
     X = np.append(p, 1.0)
-    z1 = (f1.pose @ X)[2]
-    z2 = (f2.pose @ X)[2]
-    if z1 <= MIN_POINT_DEPTH or z2 <= MIN_POINT_DEPTH:
-      continue
-    if z1 > MAX_POINT_DEPTH or z2 > MAX_POINT_DEPTH:
-      continue
+
+    if reverse:
+      z1 = (f1.pose @ X)[2]
+      z2 = (f2.pose @ X)[2]
+      if z1 <= 0.1 or z2 <= 0.1:
+        continue
+      if z1 > 300.0 or z2 > 300.0:
+        continue
 
     color = sample_pixel_color(frame, pts2[i])
     semantic_info = None

@@ -61,8 +61,9 @@ def slam():
     frame_index = 0
     step = 1
 
-  def read_frame_at(index):
-    cap.set(cv2.CAP_PROP_POS_FRAMES, index)
+  def read_frame_at(index, seek=True):
+    if seek:
+      cap.set(cv2.CAP_PROP_POS_FRAMES, index)
     ret, img = cap.read()
     if not ret or img is None:
       return False, None
@@ -73,7 +74,7 @@ def slam():
       )
     return True, img
 
-  ret, frame = read_frame_at(frame_index)
+  ret, frame = read_frame_at(frame_index, seek=True)
   if not ret:
     print("[ERROR] Failed to read the first frame.")
     cap.release()
@@ -99,23 +100,31 @@ def slam():
 
     if cv2.waitKey(1) == ord('q'):
       break
-
+    
     frame_index += step
+
     if frame_index < 0 or frame_index >= total_frames:
       break
 
     last_processed = frame.copy()
-    ret, frame = read_frame_at(frame_index)
+    ret, frame = read_frame_at(frame_index, seek=args.reverse)
     if not ret:
       break
 
     frame_diff = np.mean(np.abs(frame.astype(np.float32) - last_processed.astype(np.float32)))
     if frame_diff < 1.0:
-      print(
-        f"[WARN] Duplicate frame at index {frame_index}; "
-        "reverse seeking may be unreliable for this video."
-      )
-      break
+      if args.reverse:
+        print(
+          f"[WARN] Duplicate frame at index {frame_index}; "
+          "reverse seeking may be unreliable for this video."
+        )
+        break
+      else:
+        print(
+          f"[WARN] Duplicate frame at index {frame_index}; "
+          "video may contain a static/duplicate frame here, skipping."
+        )
+        continue
 
   ba_worker.shutdown()
   ba_worker.apply_results(map)
