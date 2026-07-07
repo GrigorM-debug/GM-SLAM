@@ -10,14 +10,15 @@ from scipy.optimize import least_squares
 from scipy.sparse import lil_matrix
 
 
-BA_CHECK_INTERVAL = 10  # how often to measure reprojection error
-BA_WINDOW = 5
-REPROJ_ERROR_THRESHOLD = 0.5  # px; skip BA when local error is already below this
-MAX_BA_POINTS = 300  # cap local window — uncapped grows to thousands of points
+BA_CHECK_INTERVAL = 5  # how often to measure reprojection error
+BA_WINDOW = 30
+REPROJ_ERROR_THRESHOLD = 0.3  # px; skip BA when local error is already below this
+MAX_BA_POINTS = 500  # cap local window — uncapped grows to thousands of points
+MIN_OBSERVATIONS_PER_POINT = 2 # a point must be seen in at least this many in-window frames to count 
 
-MIN_FRAMES = 5
-MIN_POINTS = 4
-MIN_OBSERVATIONS = 8
+MIN_FRAMES = 10
+MIN_POINTS = 100
+MIN_OBSERVATIONS = 10
 
 def rodrigues_to_R(rvec):
   theta = np.linalg.norm(rvec)
@@ -148,10 +149,21 @@ def collect_ba_data(map, window):
     return None
 
   frame_set = set(frames)
+
+  # DEBUG
+  lengths = [len(p.frames) for p in map.points]
+  if lengths:
+    print(
+      f"[BA][debug] track length — mean={np.mean(lengths):.2f} "
+      f"median={np.median(lengths):.1f} max={np.max(lengths)} "
+      f"n_points={len(lengths)} n_frames_in_map={len(map.frames)}"
+    )
+
   points = [
     p for p in map.points
-    if all(f in frame_set for f in p.frames)
+    if sum(1 for f in p.frames if f in frame_set) >= MIN_OBSERVATIONS_PER_POINT
   ]
+
   if len(points) > MAX_BA_POINTS:
     points = points[-MAX_BA_POINTS:]
   if len(points) < MIN_POINTS:
